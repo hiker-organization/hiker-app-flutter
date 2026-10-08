@@ -26,6 +26,17 @@ class LocalService {
     return PlaceDetails.fromJson(body['data'] as Map<String, dynamic>);
   }
 
+  // Search page: only places that already have reviews, with their rating.
+  Future<List<PlaceDetails>> buscar(String query) async {
+    final response = await _apiClient.get('/local/buscar?q=${Uri.encodeQueryComponent(query)}');
+    if (response.statusCode != 200) throw LocalException('Não foi possível buscar os locais.');
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return (body['data'] as List<dynamic>)
+        .map((item) => PlaceDetails.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<PlaceInfo>> getMany(List<String> placeIds) async {
     final ids = placeIds.map(Uri.encodeComponent).join(',');
     final response = await _apiClient.get('/local?ids=$ids');
