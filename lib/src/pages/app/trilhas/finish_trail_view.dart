@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:app_hiker/components/place_picker.dart';
 import 'package:app_hiker/components/profile_summary_header.dart';
 import 'package:app_hiker/components/trail_map.dart';
 import 'package:app_hiker/src/models/user_profile.dart';
 import 'package:app_hiker/src/services/api_client.dart';
+import 'package:app_hiker/src/services/places_service.dart';
 import 'package:app_hiker/src/services/trail_tracker.dart';
 import 'package:app_hiker/src/services/trilha_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
@@ -40,6 +42,7 @@ class _FinishTrailViewState extends State<FinishTrailView> {
   final _tagController = TextEditingController();
 
   late String _nome = _defaultName();
+  PlaceSuggestion? _local;
   int _nota = 0;
   final List<String> _tags = [];
   final List<XFile> _fotos = [];
@@ -121,6 +124,7 @@ class _FinishTrailViewState extends State<FinishTrailView> {
   }
 
   String? _validate() {
+    if (_local == null) return 'Escolha o local da trilha.';
     if (_nota < 1) return 'Dê uma nota de 1 a 5 estrelas para a trilha.';
     final descricao = _descricaoController.text.trim();
     if (descricao.isEmpty) return 'Descreva sua experiência na trilha.';
@@ -139,6 +143,7 @@ class _FinishTrailViewState extends State<FinishTrailView> {
     try {
       await _trilhaService.create(
         nome: _nome,
+        localId: _local!.placeId,
         cidade: _tracker.cidade,
         estado: _tracker.estado,
         distanciaM: _tracker.distanceM,
@@ -222,6 +227,13 @@ class _FinishTrailViewState extends State<FinishTrailView> {
               children: [
                 const SizedBox(height: 12),
                 _buildTitle(),
+                const SizedBox(height: 12),
+                PlacePicker(
+                  selected: _local,
+                  enabled: !_isSaving,
+                  decoration: _decoration('Onde foi? Busque o parque, trilha ou pico'),
+                  onChanged: (place) => setState(() => _local = place),
+                ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _descricaoController,

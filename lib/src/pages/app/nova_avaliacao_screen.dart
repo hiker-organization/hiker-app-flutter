@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'dart:io';
 
+import 'package:app_hiker/components/place_picker.dart';
 import 'package:app_hiker/components/submit_button.dart';
 import 'package:app_hiker/src/services/api_client.dart';
 import 'package:app_hiker/src/services/places_service.dart';
@@ -26,17 +26,10 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
   static const _notaLabels = ['Ruim', 'Regular', 'Boa', 'Muito boa', 'Excelente'];
 
   final _reviewService = ReviewService();
-  final _placesService = PlacesService();
   final _imagePicker = ImagePicker();
 
-  final _localController = TextEditingController();
   final _descricaoController = TextEditingController();
   final _tagController = TextEditingController();
-
-  Timer? _debounce;
-  List<PlaceSuggestion> _suggestions = [];
-  bool _searchingPlaces = false;
-  String? _placesError;
 
   PlaceSuggestion? _local;
   int _nota = 0;
@@ -49,51 +42,9 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
-    _localController.dispose();
     _descricaoController.dispose();
     _tagController.dispose();
     super.dispose();
-  }
-
-  void _onLocalChanged(String value) {
-    _debounce?.cancel();
-    final query = value.trim();
-
-    if (query.length < 3) {
-      setState(() {
-        _suggestions = [];
-        _placesError = null;
-        _searchingPlaces = false;
-      });
-      return;
-    }
-
-    setState(() => _searchingPlaces = true);
-    _debounce = Timer(const Duration(milliseconds: 400), () async {
-      try {
-        final suggestions = await _placesService.autocomplete(query);
-        if (!mounted || _localController.text.trim() != query) return;
-        setState(() {
-          _suggestions = suggestions;
-          _placesError = suggestions.isEmpty ? 'Nenhum local encontrado.' : null;
-        });
-      } catch (_) {
-        if (mounted) setState(() => _placesError = 'Não foi possível buscar locais.');
-      } finally {
-        if (mounted) setState(() => _searchingPlaces = false);
-      }
-    });
-  }
-
-  void _selectLocal(PlaceSuggestion place) {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _local = place;
-      _suggestions = [];
-      _placesError = null;
-      _localController.clear();
-    });
   }
 
   void _addTags(String raw) {
@@ -199,14 +150,12 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
   void _reset() {
     _descricaoController.clear();
     _tagController.clear();
-    _localController.clear();
     setState(() {
       _local = null;
       _nota = 0;
       _tags.clear();
       _fotos.clear();
       _oculto = false;
-      _suggestions = [];
     });
   }
 
@@ -239,85 +188,6 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
           child,
         ],
       ),
-    );
-  }
-
-  Widget _buildLocal() {
-    if (_local != null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Pallete.surfaceColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Pallete.primaryColor.withAlpha(120)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.place, color: Pallete.primaryColor),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_local!.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  if (_local!.address != null)
-                    Text(
-                      _local!.address!,
-                      style: TextStyle(fontSize: 12, color: Pallete.whiteColor.withAlpha(160)),
-                    ),
-                ],
-              ),
-            ),
-            IconButton(
-              tooltip: 'Trocar local',
-              icon: const Icon(Icons.close, size: 20),
-              onPressed: _isLoading ? null : () => setState(() => _local = null),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _localController,
-          onChanged: _onLocalChanged,
-          decoration: _decoration('Buscar parque, trilha, pico...', icon: Icons.search).copyWith(
-            suffixIcon: _searchingPlaces
-                ? const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                  )
-                : null,
-          ),
-        ),
-        if (_placesError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(_placesError!, style: TextStyle(color: Pallete.whiteColor.withAlpha(160))),
-          ),
-        if (_suggestions.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.only(top: 6),
-            decoration: BoxDecoration(
-              color: Pallete.surfaceColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: _suggestions
-                  .map((place) => ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.place_outlined),
-                        title: Text(place.name),
-                        subtitle: place.address == null ? null : Text(place.address!),
-                        onTap: () => _selectLocal(place),
-                      ))
-                  .toList(),
-            ),
-          ),
-      ],
     );
   }
 
@@ -442,7 +312,16 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
               style: TextStyle(color: Pallete.whiteColor.withAlpha(160)),
             ),
             const SizedBox(height: 24),
-            _section('Onde foi?', 'Busque pelo nome do parque, trilha ou pico.', _buildLocal()),
+            _section(
+              'Onde foi?',
+              'Busque pelo nome do parque, trilha ou pico.',
+              PlacePicker(
+                selected: _local,
+                enabled: !_isLoading,
+                decoration: _decoration('Buscar parque, trilha, pico...'),
+                onChanged: (place) => setState(() => _local = place),
+              ),
+            ),
             _section('Sua nota', 'De 1 a 5 estrelas.', _buildNota()),
             _section(
               'Conte como foi',

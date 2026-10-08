@@ -39,6 +39,7 @@ class TrilhaService {
 
   Future<void> create({
     required String nome,
+    required String localId,
     required String? cidade,
     required String? estado,
     required double distanciaM,
@@ -56,6 +57,7 @@ class TrilhaService {
       '/trilha',
       fields: {
         'nome': nome,
+        'local_id': localId,
         if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
         if (estado != null && estado.isNotEmpty) 'estado': estado,
         'distancia_m': distanciaM.toStringAsFixed(1),
