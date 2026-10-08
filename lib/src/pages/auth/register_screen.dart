@@ -32,7 +32,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   var _step = _Step.perfil;
   DateTime? _dataNascimento;
   XFile? _foto;
-  bool _showSenha = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -253,25 +254,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ];
       case _Step.senha:
-        final toggle = IconButton(
-          icon: _icon(_showSenha ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-          onPressed: () => setState(() => _showSenha = !_showSenha),
-        );
         return [
           LoginForm(
             hintText: 'Senha',
-            obscureText: !_showSenha,
+            obscureText: !_showPassword,
             controller: _senhaController,
             prefixIcon: _icon(Icons.lock_outline),
-            suffixIcon: toggle,
+            suffixIcon: IconButton(
+              icon: _icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+              onPressed: () => setState(() => _showPassword = !_showPassword),
+            ),
           ),
           const SizedBox(height: 12),
           LoginForm(
-            hintText: 'Confirmar senha',
-            obscureText: !_showSenha,
+            hintText: 'Confirme sua senha',
+            obscureText: !_showConfirmPassword,
             controller: _confirmarSenhaController,
             prefixIcon: _icon(Icons.lock_outline),
-            suffixIcon: toggle,
+            suffixIcon: IconButton(
+              icon: _icon(_showConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+              onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
+            ),
           ),
         ];
       case _Step.foto:

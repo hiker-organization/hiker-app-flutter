@@ -14,7 +14,7 @@ class AppModule extends Module {
   void register(ModularContext c) {
     c.route('/', child: (context, state) => const AuthGateScreen());
     c.route('/login', child: (context, state) => const LoginScreen());
-    c.route('/forgot-password', child: (context, state) => const ForgotPasswordScreen());
+    c.route('/forgot-password', child: (context, state) => ForgotPasswordScreen(initialEmail: state.arguments as String?));
     c.route('/register', child: (context, state) => const RegisterScreen());
     c.route('/app', child: (context, state) => const AppShell());
     c.route('/edit-profile', child: (context, state) => const EditProfileScreen());

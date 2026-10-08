@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   String? _errorMessage;
+  bool _showPassword = false;
 
   @override
   void dispose() {
@@ -89,8 +90,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 10),
                     LoginForm(
                       hintText: 'Senha',
-                      obscureText: true,
+                      obscureText: !_showPassword,
                       controller: _passwordController,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _showPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Pallete.whiteColor,
+                        ),
+                        onPressed: () {
+                          setState(() => _showPassword = !_showPassword);
+                        },
+                      ),
                     ),
                     const SizedBox(height: 5),
                     Row(
@@ -104,7 +116,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => context.pushNamed('/forgot-password'),
+                          onTap: () => context.pushNamed(
+                            '/forgot-password',
+                            arguments: _emailController.text.trim(),
+                          ),
                           child: const Text(
                             'Clique aqui',
                             style: TextStyle(

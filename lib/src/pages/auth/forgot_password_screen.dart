@@ -10,7 +10,9 @@ import 'package:flutter_modular/flutter_modular.dart';
 enum _Step { email, code, newPassword }
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  const ForgotPasswordScreen({super.key, this.initialEmail});
+
+  final String? initialEmail;
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -20,7 +22,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailService = EmailService();
   final _authService = AuthService();
 
-  final _emailController = TextEditingController();
+  late final _emailController = TextEditingController(text: widget.initialEmail);
   final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -28,6 +30,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   var _step = _Step.email;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   void dispose() {
@@ -155,14 +159,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         return [
           LoginForm(
             hintText: 'Nova senha',
-            obscureText: true,
+            obscureText: !_showPassword,
             controller: _passwordController,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.visibility_off, color: Pallete.whiteColor),
+              onPressed: () {
+                setState(() => _showPassword = !_showPassword);
+              },
+            ),
           ),
           const SizedBox(height: 10),
           LoginForm(
-            hintText: 'Confirmar nova senha',
-            obscureText: true,
+            hintText: 'Confirme sua nova senha',
+            obscureText: !_showConfirmPassword,
             controller: _confirmPasswordController,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.visibility_off, color: Pallete.whiteColor),
+              onPressed: () {
+                setState(() => _showConfirmPassword = !_showConfirmPassword);
+              },
+            ),
           ),
         ];
     }
