@@ -66,6 +66,14 @@ class ReviewService {
     }
   }
 
+  // "descricao" is the reason chosen, followed by the details when given.
+  Future<void> reportReview(int id, {required String descricao}) async {
+    final response = await _apiClient.post('/review/$id/denuncia', body: {'descricao': descricao});
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw ReviewException(_extractMessage(response.body, 'Não foi possível enviar a denúncia.'));
+    }
+  }
+
   Future<void> deleteReview(int id) async {
     final response = await _apiClient.delete('/review/$id');
     if (response.statusCode != 200) {
