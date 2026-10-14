@@ -68,7 +68,8 @@ class _ReportReviewSheetState extends State<ReportReviewSheet> {
     try {
       await _reviewService.reportReview(
         widget.reviewId,
-        descricao: detalhes.isEmpty ? _motivo! : '$_motivo: $detalhes',
+        categoria: _motivo!,
+        descricao: detalhes.isEmpty ? null : detalhes,
       );
       if (mounted) Navigator.of(context).pop(true);
     } on SessionExpiredException {
