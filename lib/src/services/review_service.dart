@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_hiker/src/models/feed_page.dart';
 import 'package:app_hiker/src/models/review.dart';
 import 'package:app_hiker/src/services/api_client.dart';
 import 'package:http/http.dart' as http;
@@ -18,21 +19,16 @@ class ReviewService {
 
   ReviewService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
-  Future<List<Review>> getFeed({int? cursor}) async {
-    final query = cursor != null ? '?cursor=$cursor' : '';
-    final response = await _apiClient.get('/review$query');
+  Future<FeedPage<Review>> getFeed({int? cursor, required int limit}) async {
+    final response = await _apiClient.get('/review?limit=$limit${cursor != null ? '&cursor=$cursor' : ''}');
 
-    if (response.statusCode == 404) return [];
+    if (response.statusCode == 404) return const FeedPage([], null);
 
     if (response.statusCode != 200) {
       throw Exception('Não foi possível carregar o feed');
     }
 
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final data = body['data'] as List<dynamic>;
-    return data
-        .map((item) => Review.fromJson(item as Map<String, dynamic>))
-        .toList();
+    return FeedPage.fromJson(jsonDecode(response.body) as Map<String, dynamic>, Review.fromJson);
   }
 
   Future<List<Review>> getLocalReviews(String placeId) async {
