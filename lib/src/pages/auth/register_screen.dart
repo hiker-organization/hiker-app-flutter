@@ -4,6 +4,7 @@ import 'package:app_hiker/components/login_form.dart';
 import 'package:app_hiker/components/submit_button.dart';
 import 'package:app_hiker/src/services/auth_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
+import 'package:app_hiker/src/utils/signup_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:image_picker/image_picker.dart';
@@ -49,48 +50,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  String get _nomeUsuario => _nomeUsuarioController.text.trim().replaceFirst(RegExp(r'^@+'), '');
+  String get _nomeUsuario => nomeUsuarioSemArroba(_nomeUsuarioController.text);
 
-  String get _celularDigits => _celularController.text.replaceAll(RegExp(r'\D'), '');
+  String get _celularDigits => celularDigits(_celularController.text);
 
   String? _validateStep() {
     switch (_step) {
       case _Step.perfil:
-        final nomeExibicao = _nomeExibicaoController.text.trim();
-        if (_nomeUsuario.length < 3 || _nomeUsuario.length > 20) {
-          return 'O nome de usuário deve ter entre 3 e 20 caracteres.';
-        }
-        if (!RegExp(r'^[a-zA-Z0-9_.]+$').hasMatch(_nomeUsuario)) {
-          return "O nome de usuário só pode ter letras, números, '_' ou '.'.";
-        }
-        if (nomeExibicao.isEmpty || nomeExibicao.length > 30) {
-          return 'O nome de exibição deve ter entre 1 e 30 caracteres.';
-        }
-        return null;
+        return validateNomeUsuario(_nomeUsuario) ?? validateNomeExibicao(_nomeExibicaoController.text.trim());
       case _Step.contato:
         if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_emailController.text.trim())) {
           return 'Insira um email válido.';
         }
-        if (_celularDigits.length < 10 || _celularDigits.length > 11) {
-          return 'Insira um celular válido com DDD.';
-        }
+        final celularError = validateCelular(_celularDigits);
+        if (celularError != null) return celularError;
         if (_dataNascimento == null) {
           return 'Informe sua data de nascimento.';
         }
         return null;
       case _Step.senha:
-        final senha = _senhaController.text;
-        if (senha.length < 8 ||
-            !RegExp(r'[A-Z]').hasMatch(senha) ||
-            !RegExp(r'[a-z]').hasMatch(senha) ||
-            !RegExp(r'\d').hasMatch(senha) ||
-            !RegExp(r'[^A-Za-z0-9]').hasMatch(senha)) {
-          return 'A senha precisa ter no mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.';
-        }
-        if (senha != _confirmarSenhaController.text) {
-          return 'As senhas não coincidem.';
-        }
-        return null;
+        return validateSenha(_senhaController.text, _confirmarSenhaController.text);
       case _Step.foto:
         return null;
     }
