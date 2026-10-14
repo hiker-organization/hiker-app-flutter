@@ -1,9 +1,11 @@
 import 'package:app_hiker/components/rating_stars.dart';
+import 'package:app_hiker/components/report_review_sheet.dart';
 import 'package:app_hiker/components/user_avatar.dart';
 import 'package:app_hiker/src/models/place_info.dart';
 import 'package:app_hiker/src/models/review.dart';
 import 'package:app_hiker/src/services/local_service.dart';
 import 'package:app_hiker/src/services/review_service.dart';
+import 'package:app_hiker/src/services/user_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -114,6 +116,9 @@ class _ReviewCardState extends State<ReviewCard> {
   Widget build(BuildContext context) {
     final review = widget.review;
     final hasOwnerActions = widget.onToggleVisibility != null || widget.onDelete != null;
+    // Only other users' reviews; while the logged user isn't known yet, no one's.
+    final myNick = UserService.myNick;
+    final canReport = !hasOwnerActions && myNick != null && review.autor.nomeUsuario != myNick;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -151,7 +156,7 @@ class _ReviewCardState extends State<ReviewCard> {
                 ),
               ),
               RatingStars(nota: review.nota),
-              if (hasOwnerActions) _buildOwnerMenu(),
+              if (hasOwnerActions || canReport) _buildMenu(canReport: canReport),
             ],
           ),
           const SizedBox(height: 6),
@@ -238,15 +243,36 @@ class _ReviewCardState extends State<ReviewCard> {
     );
   }
 
-  Widget _buildOwnerMenu() {
+  Future<void> _report() async {
+    final sent = await ReportReviewSheet.show(context, widget.review.id);
+    if (sent && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Denúncia enviada. Obrigado por avisar!')),
+      );
+    }
+  }
+
+  Widget _buildMenu({required bool canReport}) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert, color: Pallete.whiteColor, size: 20),
       color: Pallete.surfaceColor,
       onSelected: (value) {
         if (value == 'visibility') widget.onToggleVisibility?.call();
         if (value == 'delete') widget.onDelete?.call();
+        if (value == 'report') _report();
       },
       itemBuilder: (context) => [
+        if (canReport)
+          const PopupMenuItem(
+            value: 'report',
+            child: Row(
+              children: [
+                Icon(Icons.flag_outlined, size: 18, color: Pallete.errorColor),
+                SizedBox(width: 8),
+                Text('Denunciar', style: TextStyle(color: Pallete.errorColor)),
+              ],
+            ),
+          ),
         if (widget.onToggleVisibility != null)
           PopupMenuItem(
             value: 'visibility',

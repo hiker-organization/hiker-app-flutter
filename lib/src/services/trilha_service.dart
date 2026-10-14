@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_hiker/src/models/feed_page.dart';
 import 'package:app_hiker/src/models/trilha.dart';
 import 'package:app_hiker/src/services/api_client.dart';
 import 'package:http/http.dart' as http;
@@ -21,7 +22,12 @@ class TrilhaService {
   Future<List<Trilha>> getMine() => _getList('/trilha/me', 'Não foi possível carregar suas trilhas.');
 
   // Shared trails of every user (RF29).
-  Future<List<Trilha>> getFeed() => _getList('/trilha/feed', 'Não foi possível carregar as trilhas.');
+  Future<FeedPage<Trilha>> getFeed({int? cursor, required int limit}) async {
+    final response = await _apiClient.get('/trilha/feed?limit=$limit${cursor != null ? '&cursor=$cursor' : ''}');
+    if (response.statusCode != 200) throw TrilhaException('Não foi possível carregar as trilhas.');
+
+    return FeedPage.fromJson(jsonDecode(response.body) as Map<String, dynamic>, Trilha.fromJson);
+  }
 
   // Shared trails of another user, for their profile.
   Future<List<Trilha>> getByUser(String nick) =>
