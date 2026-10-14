@@ -10,6 +10,8 @@ class UserProfile {
   final String? email;
   final DateTime? dataNascimento;
   final String? numeroCelular;
+  // Whether the account also enters with Google; only known on the own profile.
+  final bool googleVinculado;
 
   UserProfile({
     required this.nomeExibicao,
@@ -20,6 +22,7 @@ class UserProfile {
     this.email,
     this.dataNascimento,
     this.numeroCelular,
+    this.googleVinculado = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -40,6 +43,7 @@ class UserProfile {
       email: json['email'] as String?,
       dataNascimento: dataNascimento != null ? DateTime.parse(dataNascimento).toLocal() : null,
       numeroCelular: json['numero_celular'] as String?,
+      googleVinculado: json['google_vinculado'] as bool? ?? false,
     );
   }
 }

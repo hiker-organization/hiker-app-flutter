@@ -4,6 +4,8 @@ import 'package:app_hiker/src/pages/app/local_screen.dart';
 import 'package:app_hiker/src/pages/app/trilhas/trilha_detail_screen.dart';
 import 'package:app_hiker/src/pages/app/user_profile_screen.dart';
 import 'package:app_hiker/src/pages/auth/auth_gate_screen.dart';
+import 'package:app_hiker/src/pages/auth/complete_signup_screen.dart';
+import 'package:app_hiker/src/services/auth_service.dart';
 import 'package:app_hiker/src/pages/auth/forgot_password_screen.dart';
 import 'package:app_hiker/src/pages/auth/login_screen.dart';
 import 'package:app_hiker/src/pages/auth/register_screen.dart';
@@ -16,6 +18,10 @@ class AppModule extends Module {
     c.route('/login', child: (context, state) => const LoginScreen());
     c.route('/forgot-password', child: (context, state) => ForgotPasswordScreen(initialEmail: state.arguments as String?));
     c.route('/register', child: (context, state) => const RegisterScreen());
+    c.route(
+      '/complete-signup',
+      child: (context, state) => CompleteSignupScreen(signup: state.arguments as GoogleSignup),
+    );
     c.route('/app', child: (context, state) => const AppShell());
     c.route('/edit-profile', child: (context, state) => const EditProfileScreen());
     // nick without the leading "@", which the API stores as part of the nick.

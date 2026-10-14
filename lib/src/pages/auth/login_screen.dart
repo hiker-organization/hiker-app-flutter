@@ -2,6 +2,7 @@ import 'package:app_hiker/components/login_form.dart';
 import 'package:app_hiker/components/social_button.dart';
 import 'package:app_hiker/components/submit_button.dart';
 import 'package:app_hiker/src/services/auth_service.dart';
+import 'package:app_hiker/src/services/google_sign_in_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -19,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   String? _errorMessage;
   bool _showPassword = false;
 
@@ -44,11 +46,41 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(
-        () => _errorMessage = 'Erro ao conectar com o servidor $e.message',
-      );
+      setState(() => _errorMessage = 'Erro ao conectar com o servidor.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // Linked accounts enter straight away; a first access goes to finish the sign-up.
+  Future<void> handleGoogleLogin() async {
+    if (_isLoading || _isGoogleLoading) return;
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final idToken = await GoogleSignInService.instance.getIdToken();
+      if (idToken == null) return;
+
+      final signup = await _authService.loginWithGoogle(idToken);
+      if (!mounted) return;
+      if (signup == null) {
+        context.navigate('/app');
+      } else {
+        // Lets the user pick another Google account if they go back.
+        await GoogleSignInService.instance.signOut();
+        if (mounted) context.pushNamed('/complete-signup', arguments: signup);
+      }
+    } on AuthException catch (e) {
+      // e.g. an account with this email that wasn't linked to Google yet.
+      await GoogleSignInService.instance.signOut();
+      if (mounted) setState(() => _errorMessage = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _errorMessage = 'Não foi possível entrar com o Google.');
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -76,9 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     SocialButton(
                       iconName: 'google',
                       label: 'Entrar com Google',
-                      onPressed: () {
-                        // Handle Google sign-in
-                      },
+                      isLoading: _isGoogleLoading,
+                      onPressed: handleGoogleLogin,
                     ),
                     const SizedBox(height: 10),
                     const Text(
@@ -145,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           border: Border.all(color: Colors.red.shade200),
                         ),
                         child: Text(
-                          "E-mail ou senha incorretos. Tente novamente.",
+                          _errorMessage!,
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Pallete.errorColor),
                         ),

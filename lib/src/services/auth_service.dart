@@ -13,6 +13,24 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
+// First Google sign-in: what Google gave, to prefill the sign-up, and the token that
+// proves it to the API.
+class GoogleSignup {
+  final String signupToken;
+  final String email;
+  final String? nomeExibicao;
+  final String? fotoUrl;
+
+  GoogleSignup({required this.signupToken, required this.email, this.nomeExibicao, this.fotoUrl});
+
+  factory GoogleSignup.fromJson(Map<String, dynamic> json) => GoogleSignup(
+        signupToken: json['signup_token'] as String,
+        email: json['email'] as String,
+        nomeExibicao: json['nome_exibicao'] as String?,
+        fotoUrl: json['foto_url'] as String?,
+      );
+}
+
 String _extractMessage(dynamic message, String fallback) {
   if (message == null) return fallback;
   if (message is List) return message.join(', ');
@@ -41,6 +59,57 @@ class AuthService {
       throw AuthException(_extractMessage(body['message'], 'Não foi possível fazer login'));
     }
 
+    await _saveTokens(body);
+  }
+
+  // Null when the account was already linked and the user is logged in; otherwise the data
+  // to finish the sign-up on CompleteSignupScreen.
+  Future<GoogleSignup?> loginWithGoogle(String idToken) async {
+    final body = await _postJson('/auth/google', {'id_token': idToken}, 'Não foi possível entrar com o Google');
+    if (body['needs_signup'] == true) return GoogleSignup.fromJson(body);
+    await _saveTokens(body);
+    return null;
+  }
+
+  Future<void> registerWithGoogle({
+    required String signupToken,
+    required String nomeUsuario,
+    required String nomeExibicao,
+    required String senha,
+    required String numeroCelular,
+    required DateTime dataNascimento,
+  }) async {
+    final body = await _postJson(
+      '/auth/google/register',
+      {
+        'signup_token': signupToken,
+        'nome_usuario': nomeUsuario,
+        'nome_exibicao': nomeExibicao,
+        'senha': senha,
+        'numero_celular': numeroCelular,
+        'data_nascimento': dataNascimento.toIso8601String(),
+      },
+      'Não foi possível criar a conta',
+    );
+    await _saveTokens(body);
+  }
+
+  Future<Map<String, dynamic>> _postJson(String path, Map<String, dynamic> data, String fallback) async {
+    final baseUrl = dotenv.env['API_BASE_URL'];
+    final response = await _client.post(
+      Uri.parse('$baseUrl$path'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw AuthException(_extractMessage(body['message'], fallback));
+    }
+    return body;
+  }
+
+  Future<void> _saveTokens(Map<String, dynamic> body) async {
     await _storage.write(key: 'access_token', value: body['access_token'] as String);
     await _storage.write(key: 'refresh_token', value: body['refresh_token'] as String);
   }

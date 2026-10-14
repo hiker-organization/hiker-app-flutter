@@ -7,10 +7,12 @@ import 'package:app_hiker/components/submit_button.dart';
 import 'package:app_hiker/components/user_avatar.dart';
 import 'package:app_hiker/src/models/user_profile.dart';
 import 'package:app_hiker/src/services/api_client.dart';
+import 'package:app_hiker/src/services/google_sign_in_service.dart';
 import 'package:app_hiker/src/services/user_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 
 // RF17: name, display name, phone, photo and birth date are saved together; e-mail (RN17.6)
@@ -36,6 +38,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   XFile? _foto;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isLinkingGoogle = false;
   String? _loadError;
   String? _errorMessage;
 
@@ -185,6 +188,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (changed == true) _showMessage('Senha alterada com sucesso.');
   }
 
+  Future<void> _linkGoogle() async {
+    setState(() => _isLinkingGoogle = true);
+    try {
+      final idToken = await GoogleSignInService.instance.getIdToken();
+      if (idToken == null) return;
+      await _userService.linkGoogle(idToken);
+      _showMessage('Conta Google vinculada. Agora você também pode entrar com o Google.');
+      await _loadProfile();
+    } on SessionExpiredException {
+      if (mounted) context.navigate('/login');
+    } on UserException catch (e) {
+      // Lets the user try with another Google account.
+      await GoogleSignInService.instance.signOut();
+      _showMessage(e.message);
+    } catch (_) {
+      _showMessage('Não foi possível vincular a conta Google.');
+    } finally {
+      if (mounted) setState(() => _isLinkingGoogle = false);
+    }
+  }
+
   Future<bool?> _showSheet(Widget sheet) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -316,6 +340,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 subtitle: '••••••••',
                 onTap: _isSaving ? null : _openChangePassword,
               ),
+              const SizedBox(height: 8),
+              _buildGoogleTile(profile),
             ],
           ),
         ),
@@ -349,6 +375,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleTile(UserProfile profile) {
+    final vinculado = profile.googleVinculado;
+    return Material(
+      color: Pallete.surfaceColor,
+      borderRadius: BorderRadius.circular(12),
+      child: ListTile(
+        onTap: vinculado || _isSaving || _isLinkingGoogle ? null : _linkGoogle,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: SvgPicture.asset(
+          'assets/svg/google.svg',
+          width: 24,
+          height: 24,
+          colorFilter: const ColorFilter.mode(Pallete.primaryColor, BlendMode.srcIn),
+        ),
+        title: const Text('Conta Google', style: TextStyle(color: Pallete.whiteColor)),
+        subtitle: Text(
+          vinculado ? 'Você também entra com o Google' : 'Entre com o Google sem digitar a senha',
+          style: TextStyle(color: Pallete.whiteColor.withAlpha(160)),
+        ),
+        trailing: _isLinkingGoogle
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            : vinculado
+                ? const Icon(Icons.check_circle, color: Pallete.primaryColor)
+                : const Text('Vincular', style: TextStyle(color: Pallete.primaryColor)),
       ),
     );
   }

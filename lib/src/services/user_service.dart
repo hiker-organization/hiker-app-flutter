@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app_hiker/src/models/user_profile.dart';
 import 'package:app_hiker/src/services/api_client.dart';
+import 'package:app_hiker/src/services/google_sign_in_service.dart';
 import 'package:app_hiker/src/services/trail_tracker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -109,6 +110,14 @@ class UserService {
     }
   }
 
+  // From then on the account also enters with this Google account, without the password.
+  Future<void> linkGoogle(String idToken) async {
+    final response = await _apiClient.post('/auth/google/link', body: {'id_token': idToken});
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw UserException(_extractMessage(response.body, 'Não foi possível vincular a conta Google.'));
+    }
+  }
+
   String _extractMessage(String responseBody, String fallback) {
     try {
       final message = (jsonDecode(responseBody) as Map<String, dynamic>)['message'];
@@ -151,6 +160,7 @@ class UserService {
     myNick = null;
     // The trail in progress is stored on the device and belongs to this user.
     await TrailTracker.instance.discard();
+    await GoogleSignInService.instance.signOut();
     await _storage.delete(key: 'access_token');
     await _storage.delete(key: 'refresh_token');
   }

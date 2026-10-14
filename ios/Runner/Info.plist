@@ -12,6 +12,23 @@
     </array>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Usamos sua galeria para você escolher uma foto de perfil.</string>
+    <!-- Google sign-in: iOS OAuth client, web client (audience of the ID token checked by
+         the API) and the reversed iOS client id, where Google returns after the sign-in. -->
+    <key>GIDClientID</key>
+    <string>74850462964-nmh8k43kr6grfuqc8lefni3hdurtn0eo.apps.googleusercontent.com</string>
+    <key>GIDServerClientID</key>
+    <string>74850462964-3l2p0t2v5328nrhq65vao4135eripkms.apps.googleusercontent.com</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.74850462964-nmh8k43kr6grfuqc8lefni3hdurtn0eo</string>
+        </array>
+      </dict>
+    </array>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
