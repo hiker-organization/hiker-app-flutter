@@ -223,16 +223,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading && _profile == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final profile = _profile;
+    if (profile == null) {
+      if (_isLoading) return const Center(child: CircularProgressIndicator());
 
-    if (_loadError != null && _profile == null) {
+      // Also reached when the session expired: the screen is going to the login.
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_loadError!, style: const TextStyle(color: Pallete.errorColor)),
+            Text(
+              _loadError ?? 'Não foi possível carregar o perfil.',
+              style: const TextStyle(color: Pallete.errorColor),
+            ),
             TextButton(
               onPressed: _loadProfile,
               child: const Text('Tentar novamente', style: TextStyle(color: Pallete.primaryColor)),
@@ -241,8 +244,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
     }
-
-    final profile = _profile!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),

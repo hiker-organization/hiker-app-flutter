@@ -179,16 +179,19 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading && _profile == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final profile = _profile;
+    if (profile == null) {
+      if (_isLoading) return const Center(child: CircularProgressIndicator());
 
-    if (_errorMessage != null && _profile == null) {
+      // Also reached when the session expired: the screen is going to the login.
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Pallete.errorColor)),
+            Text(
+              _errorMessage ?? 'Não foi possível carregar o perfil.',
+              style: const TextStyle(color: Pallete.errorColor),
+            ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _loadProfile,
@@ -204,7 +207,7 @@ class _ProfileViewState extends State<ProfileView> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildHeader(_profile!),
+          _buildHeader(profile),
           const SizedBox(height: 20),
           _buildTabs(),
           const SizedBox(height: 16),
