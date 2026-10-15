@@ -4,6 +4,7 @@ import 'package:app_hiker/src/models/user_profile.dart';
 import 'package:app_hiker/src/services/api_client.dart';
 import 'package:app_hiker/src/services/google_sign_in_service.dart';
 import 'package:app_hiker/src/services/trail_tracker.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -157,11 +158,28 @@ class UserService {
   }
 
   Future<void> logout() async {
+    await _revokeRefreshToken();
     myNick = null;
     // The trail in progress is stored on the device and belongs to this user.
     await TrailTracker.instance.discard();
     await GoogleSignInService.instance.signOut();
     await _storage.delete(key: 'access_token');
     await _storage.delete(key: 'refresh_token');
+  }
+
+  // Ends the session on the API, so the refresh token can't be used anymore. Offline or
+  // with the API down the user still logs out on the device.
+  Future<void> _revokeRefreshToken() async {
+    final refreshToken = await _storage.read(key: 'refresh_token');
+    if (refreshToken == null) return;
+    try {
+      await http
+          .post(
+            Uri.parse('${dotenv.env['API_BASE_URL']}/auth/logout'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refresh_token': refreshToken}),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 }
