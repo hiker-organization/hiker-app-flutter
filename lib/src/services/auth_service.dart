@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:app_hiker/src/services/trail_tracker.dart';
+import 'package:app_hiker/src/utils/session_user.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -110,8 +112,11 @@ class AuthService {
   }
 
   Future<void> _saveTokens(Map<String, dynamic> body) async {
-    await _storage.write(key: 'access_token', value: body['access_token'] as String);
+    final accessToken = body['access_token'] as String;
+    await _storage.write(key: 'access_token', value: accessToken);
     await _storage.write(key: 'refresh_token', value: body['refresh_token'] as String);
+    // A trail left on the phone by another account is not shown to this one.
+    await TrailTracker.instance.claimFor(userIdFromToken(accessToken));
   }
 
   Future<void> register({

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_hiker/src/models/trilha.dart';
+import 'package:app_hiker/src/utils/session_user.dart';
 import 'package:app_hiker/src/utils/step_detector.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
@@ -23,7 +24,8 @@ class TrailPermissionException implements Exception {
 
 // Records the trail in progress (RF24-RF26): steps from the accelerometer and the
 // route from the GPS. The state is saved on the device so a paused or finished trail
-// survives the app being closed (RN25.1).
+// survives the app being closed (RN25.1). It is tied to the account that started it, so
+// another account logging in on the same phone doesn't get it.
 class TrailTracker extends ChangeNotifier {
   TrailTracker._();
   static final instance = TrailTracker._();
@@ -49,6 +51,8 @@ class TrailTracker extends ChangeNotifier {
   String? estado;
   Duration _elapsedBeforeRun = Duration.zero;
   DateTime? _runStartedAt;
+  // Id of the user that started the trail.
+  String? _ownerId;
 
   Duration get elapsed => _runStartedAt == null
       ? _elapsedBeforeRun
@@ -59,6 +63,7 @@ class TrailTracker extends ChangeNotifier {
   Future<void> start() async {
     if (status != TrailStatus.idle) return;
     await _ensureLocationPermission();
+    _ownerId = await currentUserId();
     startedAt = DateTime.now();
     await _run();
   }
@@ -97,6 +102,7 @@ class TrailTracker extends ChangeNotifier {
     cidade = null;
     estado = null;
     _elapsedBeforeRun = Duration.zero;
+    _ownerId = null;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey);
@@ -119,9 +125,22 @@ class TrailTracker extends ChangeNotifier {
       cidade = json['cidade'] as String?;
       estado = json['estado'] as String?;
       _elapsedBeforeRun = Duration(seconds: json['elapsedS'] as int);
+      _ownerId = json['ownerId'] as String?;
       notifyListeners();
     } catch (e) {
       debugPrint('Could not restore the trail in progress: $e');
+    }
+  }
+
+  // Called when a session starts. A trail left by another account is thrown away.
+  Future<void> claimFor(String? userId) async {
+    if (!hasTrail || userId == null) return;
+    if (_ownerId == null) {
+      // Trail saved before the owner was recorded: it stays with whoever logs in.
+      _ownerId = userId;
+      await _save();
+    } else if (_ownerId != userId) {
+      await discard();
     }
   }
 
@@ -257,6 +276,7 @@ class TrailTracker extends ChangeNotifier {
         'cidade': cidade,
         'estado': estado,
         'elapsedS': elapsed.inSeconds,
+        'ownerId': _ownerId,
       }),
     );
   }
