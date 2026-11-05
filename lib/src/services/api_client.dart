@@ -119,10 +119,15 @@ class ApiClient {
       body: jsonEncode({'refresh_token': refreshToken}),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
+    // Only a rejected refresh token ends the session. A server error keeps the tokens, so
+    // the user isn't logged out because the API had a problem.
+    if (const {400, 401, 403}.contains(response.statusCode)) {
       await _storage.delete(key: 'access_token');
       await _storage.delete(key: 'refresh_token');
       return null;
+    }
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Não foi possível renovar a sessão (${response.statusCode})');
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
