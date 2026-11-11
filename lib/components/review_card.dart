@@ -70,15 +70,10 @@ class _ReviewCardState extends State<ReviewCard> {
 
     try {
       await _reviewService.likeReview(widget.review.id);
+    } on ReviewException catch (e) {
+      _revertVote(previous, e.message);
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _liked = previous.$1;
-          _disliked = previous.$2;
-          _qntLikes = previous.$3;
-          _qntDislikes = previous.$4;
-        });
-      }
+      _revertVote(previous);
     }
   }
 
@@ -95,15 +90,24 @@ class _ReviewCardState extends State<ReviewCard> {
 
     try {
       await _reviewService.dislikeReview(widget.review.id);
+    } on ReviewException catch (e) {
+      _revertVote(previous, e.message);
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _liked = previous.$1;
-          _disliked = previous.$2;
-          _qntLikes = previous.$3;
-          _qntDislikes = previous.$4;
-        });
-      }
+      _revertVote(previous);
+    }
+  }
+
+  // Undoes the optimistic vote. message is the reason given by the API, e.g. a blocked user.
+  void _revertVote((bool, bool, int, int) previous, [String? message]) {
+    if (!mounted) return;
+    setState(() {
+      _liked = previous.$1;
+      _disliked = previous.$2;
+      _qntLikes = previous.$3;
+      _qntDislikes = previous.$4;
+    });
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 

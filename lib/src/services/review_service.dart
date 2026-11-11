@@ -45,17 +45,21 @@ class ReviewService {
         .toList();
   }
 
+  // A blocked user gets a 403 with the reason in the message; the session stays.
+  // 409 means the vote was already there, so the screen is already right.
   Future<void> likeReview(int id) async {
     final response = await _apiClient.post('/review/$id/like');
+    if (response.statusCode == 409) return;
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Não foi possível curtir a review');
+      throw ReviewException(_extractMessage(response.body, 'Não foi possível curtir a avaliação.'));
     }
   }
 
   Future<void> dislikeReview(int id) async {
     final response = await _apiClient.post('/review/$id/dislike');
+    if (response.statusCode == 409) return;
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Não foi possível descurtir a review');
+      throw ReviewException(_extractMessage(response.body, 'Não foi possível descurtir a avaliação.'));
     }
   }
 
