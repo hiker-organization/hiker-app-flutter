@@ -16,10 +16,16 @@ class GoogleSignInService {
       _initialized ??= GoogleSignIn.instance.initialize(serverClientId: googleWebClientId);
 
   // Null when the user closes the picker.
+  // The lightweight flow comes first: an account that already authorized the app is
+  // picked without the consent screen again. authenticate() (the full "Sign in with
+  // Google" sheet, which always shows the consent) is only used when the lightweight flow
+  // has nothing to offer, e.g. no Google account on the phone yet.
   Future<String?> getIdToken() async {
     await _init();
     try {
-      final account = await GoogleSignIn.instance.authenticate();
+      final account =
+          await GoogleSignIn.instance.attemptLightweightAuthentication(reportAllExceptions: true) ??
+              await GoogleSignIn.instance.authenticate();
       return account.authentication.idToken;
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) return null;
