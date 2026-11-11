@@ -16,16 +16,19 @@ class GoogleSignInService {
       _initialized ??= GoogleSignIn.instance.initialize(serverClientId: googleWebClientId);
 
   // Null when the user closes the picker.
-  // The lightweight flow comes first: an account that already authorized the app is
-  // picked without the consent screen again. authenticate() (the full "Sign in with
-  // Google" sheet, which always shows the consent) is only used when the lightweight flow
-  // has nothing to offer, e.g. no Google account on the phone yet.
-  Future<String?> getIdToken() async {
+  // The lightweight flow comes first: the last account used signs in again without
+  // authenticate(), whose Google page ("signing in again to Hker") shows up on every
+  // interactive sign-in on iOS and makes Google send an e-mail about it. That's why the
+  // app logout keeps the Google session. chooseAccount skips it and asks for an account.
+  Future<String?> getIdToken({bool chooseAccount = false}) async {
     await _init();
     try {
-      final account =
-          await GoogleSignIn.instance.attemptLightweightAuthentication(reportAllExceptions: true) ??
-              await GoogleSignIn.instance.authenticate();
+      if (chooseAccount) await GoogleSignIn.instance.signOut();
+      final account = (chooseAccount
+              ? null
+              : await GoogleSignIn.instance
+                  .attemptLightweightAuthentication(reportAllExceptions: true)) ??
+          await GoogleSignIn.instance.authenticate();
       return account.authentication.idToken;
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) return null;
@@ -33,7 +36,8 @@ class GoogleSignInService {
     }
   }
 
-  // Without it, the next sign-in picks the same account again without asking.
+  // Without it, the next sign-in picks the same account again without asking. Used when
+  // that account can't be used here (not linked, sign-up not finished).
   Future<void> signOut() async {
     try {
       await _init();

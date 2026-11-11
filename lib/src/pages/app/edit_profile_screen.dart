@@ -191,7 +191,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _linkGoogle() async {
     setState(() => _isLinkingGoogle = true);
     try {
-      final idToken = await GoogleSignInService.instance.getIdToken();
+      // Always asks: the account left from a previous login may be someone else's.
+      final idToken = await GoogleSignInService.instance.getIdToken(chooseAccount: true);
       if (idToken == null) return;
       await _userService.linkGoogle(idToken);
       _showMessage('Conta Google vinculada. Agora você também pode entrar com o Google.');

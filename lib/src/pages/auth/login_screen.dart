@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // Linked accounts enter straight away; a first access goes to finish the sign-up.
-  Future<void> handleGoogleLogin() async {
+  Future<void> handleGoogleLogin({bool chooseAccount = false}) async {
     if (_isLoading || _isGoogleLoading) return;
     setState(() {
       _isGoogleLoading = true;
@@ -61,7 +61,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final idToken = await GoogleSignInService.instance.getIdToken();
+      final idToken =
+          await GoogleSignInService.instance.getIdToken(chooseAccount: chooseAccount);
       if (idToken == null) return;
 
       final signup = await _authService.loginWithGoogle(idToken);
@@ -110,6 +111,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: 'Entrar com Google',
                       isLoading: _isGoogleLoading,
                       onPressed: handleGoogleLogin,
+                    ),
+                    TextButton(
+                      onPressed: _isLoading || _isGoogleLoading
+                          ? null
+                          : () => handleGoogleLogin(chooseAccount: true),
+                      child: const Text(
+                        'Usar outra conta Google',
+                        style: TextStyle(color: Pallete.whiteColor),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     const Text(
