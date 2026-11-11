@@ -2,6 +2,9 @@ import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
 
 class LoginForm extends StatelessWidget {
+  // The fields fill the available width up to this; buttons next to them use it too.
+  static const maxWidth = 312.0;
+
   final String hintText;
   final bool obscureText;
   final TextEditingController? controller;
@@ -25,7 +28,7 @@ class LoginForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(constraints: const BoxConstraints(maxWidth: 312),
+    return ConstrainedBox(constraints: const BoxConstraints(maxWidth: maxWidth),
     child: TextFormField(
       controller: controller,
       keyboardType: keyboardType,
