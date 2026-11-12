@@ -12,7 +12,10 @@ import 'package:flutter_modular/flutter_modular.dart';
 // "Trilhas" tab. Shows the user's trails, the trail being tracked or the form to save a
 // finished one, following the state of the TrailTracker so the footer stays visible.
 class TrilhasScreen extends StatefulWidget {
-  const TrilhasScreen({super.key});
+  // Changes when the profile is edited elsewhere, so the header reloads it.
+  final int profileVersion;
+
+  const TrilhasScreen({super.key, this.profileVersion = 0});
 
   @override
   State<TrilhasScreen> createState() => _TrilhasScreenState();
@@ -34,14 +37,20 @@ class _TrilhasScreenState extends State<TrilhasScreen> {
   @override
   void initState() {
     super.initState();
+    _loadTrailCount();
     _loadProfile();
+  }
+
+  @override
+  void didUpdateWidget(TrilhasScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.profileVersion != oldWidget.profileVersion) _loadProfile();
   }
 
   int? get _postsCount =>
       _profile == null || _trailCount == null ? null : _profile!.reviews.length + _trailCount!;
 
   Future<void> _loadProfile() async {
-    _loadTrailCount();
     try {
       final profile = await _userService.getMe();
       if (mounted) setState(() => _profile = profile);

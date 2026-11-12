@@ -21,6 +21,8 @@ class _AppShellState extends State<AppShell> {
 
   int _currentIndex = 0;
   int _feedVersion = 0;
+  // Bumped after the profile is edited so the trails header reloads it.
+  int _profileVersion = 0;
   String? _photoUrl;
 
   List<Widget> get _tabs => [
@@ -28,9 +30,9 @@ class _AppShellState extends State<AppShell> {
       key: ValueKey(_feedVersion),
       onNovaAvaliacaoTap: () => setState(() => _currentIndex = _novaAvaliacaoIndex),
     ),
-    const TrilhasScreen(),
+    TrilhasScreen(profileVersion: _profileVersion),
     // Rebuilt with the feed so a new review shows up on the profile.
-    PerfilScreen(key: ValueKey(_feedVersion), onProfileEdited: _loadProfilePhoto),
+    PerfilScreen(key: ValueKey(_feedVersion), onProfileEdited: _onProfileEdited),
     NovaAvaliacaoScreen(
       onPublished: () => setState(() {
         _feedVersion++;
@@ -43,6 +45,11 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    _loadProfilePhoto();
+  }
+
+  void _onProfileEdited() {
+    setState(() => _profileVersion++);
     _loadProfilePhoto();
   }
 
