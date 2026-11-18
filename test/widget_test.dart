@@ -1,9 +1,8 @@
-// This is a basic Flutter widget test.
+// Teste de widget básico do Flutter.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Para interagir com um widget no teste, use o WidgetTester do pacote
+// flutter_test. Com ele dá para enviar toques e rolagens, encontrar widgets
+// filhos na árvore, ler textos e conferir os valores das propriedades.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -13,8 +12,8 @@ import 'package:app_hiker/app_module.dart';
 import 'package:app_hiker/main.dart';
 
 void main() {
-  testWidgets('Login screen shows the login form', (WidgetTester tester) async {
-    // AuthGateScreen reads the stored session first; with no tokens it goes to /login.
+  testWidgets('a tela de login mostra o formulário de login', (WidgetTester tester) async {
+    // O AuthGateScreen lê a sessão salva primeiro; sem tokens, vai para /login.
     FlutterSecureStorage.setMockInitialValues({});
 
     await tester.pumpWidget(ModularApp(module: AppModule(), child: const AppWidget()));

@@ -9,19 +9,19 @@ String _token(Map<String, dynamic> payload) {
 }
 
 void main() {
-  test('reads the numeric sub as a string', () {
+  test('lê o sub numérico como string', () {
     expect(userIdFromToken(_token({'sub': 42, 'email': 'a@b.com', 'cargo': 'USER'})), '42');
   });
 
-  test('handles payloads that need base64 padding', () {
+  test('trata payloads que precisam de padding no base64', () {
     expect(userIdFromToken(_token({'sub': 7, 'email': 'ação@exemplo.com'})), '7');
   });
 
-  test('returns null without sub', () {
+  test('retorna null quando não há sub', () {
     expect(userIdFromToken(_token({'email': 'a@b.com'})), isNull);
   });
 
-  test('returns null for malformed tokens', () {
+  test('retorna null para tokens malformados', () {
     expect(userIdFromToken('not-a-jwt'), isNull);
     expect(userIdFromToken('a.%%%.c'), isNull);
   });

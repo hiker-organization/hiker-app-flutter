@@ -15,19 +15,19 @@ PlaceInfo _place({bool isCidade = false, String? cidade = 'Jundiaí', String? si
 }
 
 void main() {
-  test('shows city, state and country of a place', () {
+  test('mostra cidade, estado e país de um local', () {
     expect(_place().localidade, 'Jundiaí, SP, BR');
   });
 
-  test('does not repeat the name of a city', () {
+  test('não repete o nome quando o local é uma cidade', () {
     expect(_place(isCidade: true).localidade, 'SP, BR');
   });
 
-  test('falls back to the state name and skips what is missing', () {
+  test('usa o nome do estado como alternativa e ignora o que estiver faltando', () {
     expect(_place(cidade: null, siglaEstado: null).localidade, 'São Paulo, BR');
   });
 
-  test('reads the API response', () {
+  test('lê a resposta da API', () {
     final place = PlaceInfo.fromJson({
       'place_id': 'abc',
       'nome': 'Jundiaí',
