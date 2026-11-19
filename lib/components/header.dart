@@ -1,11 +1,11 @@
 import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 
 class Header extends StatelessWidget {
   final VoidCallback onNovaAvaliacaoTap;
+  final VoidCallback onMenuTap;
 
-  const Header({super.key, required this.onNovaAvaliacaoTap});
+  const Header({super.key, required this.onNovaAvaliacaoTap, required this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +22,9 @@ class Header extends StatelessWidget {
             ),
             Image.asset('assets/img/logo.png', height: 32),
             IconButton(
-              icon: const Icon(Icons.settings, color: Pallete.whiteColor),
-              onPressed: () => context.pushNamed('/edit-profile'),
+              tooltip: 'Menu',
+              icon: const Icon(Icons.menu, color: Pallete.whiteColor),
+              onPressed: onMenuTap,
             ),
           ],
         ),

@@ -13,8 +13,9 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 class FeedScreen extends StatefulWidget {
   final VoidCallback onNovaAvaliacaoTap;
+  final VoidCallback onMenuTap;
 
-  const FeedScreen({super.key, required this.onNovaAvaliacaoTap});
+  const FeedScreen({super.key, required this.onNovaAvaliacaoTap, required this.onMenuTap});
 
   @override
   State<FeedScreen> createState() => _FeedScreenState();
@@ -209,7 +210,7 @@ class _FeedScreenState extends State<FeedScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Header(onNovaAvaliacaoTap: widget.onNovaAvaliacaoTap),
+        Header(onNovaAvaliacaoTap: widget.onNovaAvaliacaoTap, onMenuTap: widget.onMenuTap),
         Expanded(child: _buildBody()),
       ],
     );

@@ -127,14 +127,6 @@ class UserService {
     return fallback;
   }
 
-  Future<String?> getMyPhotoUrl() async {
-    try {
-      return (await getMe()).fotoUrl;
-    } catch (_) {
-      return null;
-    }
-  }
-
   // Validates the stored session against the API; ApiClient refreshes the token on 401.
   // Returns false only when the session is known to be invalid. Network failures and
   // server errors keep the user logged in so an offline start doesn't force a new login.
