@@ -36,6 +36,7 @@ class Review {
   final List<String> tags;
   final bool liked;
   final bool disliked;
+  final bool favorited;
   // Hidden reviews are only returned to their own author.
   final bool oculto;
 
@@ -53,6 +54,7 @@ class Review {
     required this.tags,
     required this.liked,
     required this.disliked,
+    this.favorited = false,
     this.oculto = false,
   });
 
@@ -76,6 +78,7 @@ class Review {
           .toList(),
       liked: json['liked'] as bool? ?? false,
       disliked: json['disliked'] as bool? ?? false,
+      favorited: json['favorited'] as bool? ?? false,
       oculto: json['oculto'] as bool? ?? false,
     );
   }

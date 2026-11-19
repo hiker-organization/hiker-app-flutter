@@ -40,6 +40,8 @@ class _ReviewCardState extends State<ReviewCard> {
   late bool _disliked = widget.review.disliked;
   late int _qntLikes = widget.review.qntLikes;
   late int _qntDislikes = widget.review.qntDislikes;
+  late bool _favorited = widget.review.favorited;
+  bool _isSavingFavorite = false;
   late Future<PlaceInfo?>? _place = _loadPlace();
 
   Future<PlaceInfo?>? _loadPlace() {
@@ -108,6 +110,31 @@ class _ReviewCardState extends State<ReviewCard> {
     });
     if (message != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_isSavingFavorite) return;
+
+    final favorited = !_favorited;
+    setState(() {
+      _favorited = favorited;
+      _isSavingFavorite = true;
+    });
+
+    try {
+      if (favorited) {
+        await _reviewService.favoriteReview(widget.review.id);
+      } else {
+        await _reviewService.unfavoriteReview(widget.review.id);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _favorited = !favorited);
+      final message = e is ReviewException ? e.message : 'Não foi possível salvar o favorito.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _isSavingFavorite = false);
     }
   }
 
@@ -238,6 +265,18 @@ class _ReviewCardState extends State<ReviewCard> {
                     const SizedBox(width: 4),
                     Text('$_qntDislikes', style: const TextStyle(color: Pallete.whiteColor)),
                   ],
+                ),
+              ),
+              const Spacer(),
+              InkWell(
+                onTap: _toggleFavorite,
+                child: Tooltip(
+                  message: _favorited ? 'Remover dos favoritos' : 'Favoritar',
+                  child: Icon(
+                    _favorited ? Icons.bookmark : Icons.bookmark_border,
+                    size: 20,
+                    color: _favorited ? Pallete.primaryColor : Pallete.whiteColor,
+                  ),
                 ),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'package:app_hiker/src/pages/app/app_shell.dart';
 import 'package:app_hiker/src/pages/app/edit_profile_screen.dart';
+import 'package:app_hiker/src/pages/app/favorites_screen.dart';
 import 'package:app_hiker/src/pages/app/local_screen.dart';
 import 'package:app_hiker/src/pages/app/trilhas/trilha_detail_screen.dart';
 import 'package:app_hiker/src/pages/app/user_profile_screen.dart';
@@ -23,6 +24,7 @@ class AppModule extends Module {
       '/complete-signup',
       child: (context, state) => CompleteSignupScreen(signup: state.arguments as GoogleSignup),
     );
+    c.route('/favorites', child: (context, state) => const FavoritesScreen());
     c.route('/privacy-policy', child: (context, state) => const PrivacyPolicyScreen());
     c.route('/app', child: (context, state) => const AppShell());
     c.route('/edit-profile', child: (context, state) => const EditProfileScreen());

@@ -31,6 +31,37 @@ class ReviewService {
     return FeedPage.fromJson(jsonDecode(response.body) as Map<String, dynamic>, Review.fromJson);
   }
 
+  // Reviews the logged user favorited, the last favorited first.
+  Future<FeedPage<Review>> getFavorites({int? cursor, required int limit}) async {
+    final response =
+        await _apiClient.get('/user/me/favorites?limit=$limit${cursor != null ? '&cursor=$cursor' : ''}');
+
+    // The API answers 404 when there is no favorite.
+    if (response.statusCode == 404) return const FeedPage([], null);
+    if (response.statusCode != 200) {
+      throw Exception('Não foi possível carregar as favoritas');
+    }
+
+    return FeedPage.fromJson(jsonDecode(response.body) as Map<String, dynamic>, Review.fromJson);
+  }
+
+  // 422 means it was already favorited (or already removed), so the screen is already right.
+  Future<void> favoriteReview(int id) async {
+    final response = await _apiClient.post('/review/favorite/$id');
+    if (response.statusCode == 422) return;
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw ReviewException(_extractMessage(response.body, 'Não foi possível favoritar a avaliação.'));
+    }
+  }
+
+  Future<void> unfavoriteReview(int id) async {
+    final response = await _apiClient.delete('/review/favorite/$id');
+    if (response.statusCode == 422) return;
+    if (response.statusCode != 200) {
+      throw ReviewException(_extractMessage(response.body, 'Não foi possível remover dos favoritos.'));
+    }
+  }
+
   Future<List<Review>> getLocalReviews(String placeId) async {
     final response = await _apiClient.get('/review/local/${Uri.encodeComponent(placeId)}');
 
