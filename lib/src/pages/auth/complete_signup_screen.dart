@@ -1,4 +1,5 @@
 import 'package:app_hiker/components/login_form.dart';
+import 'package:app_hiker/components/privacy_policy_checkbox.dart';
 import 'package:app_hiker/components/submit_button.dart';
 import 'package:app_hiker/src/services/auth_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
@@ -30,6 +31,7 @@ class _CompleteSignupScreenState extends State<CompleteSignupScreen> {
   DateTime? _dataNascimento;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _aceitePolitica = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -55,7 +57,8 @@ class _CompleteSignupScreenState extends State<CompleteSignupScreen> {
     return validateNomeUsuario(nomeUsuarioSemArroba(_nomeUsuarioController.text)) ??
         validateNomeExibicao(_nomeExibicaoController.text.trim()) ??
         validateCelular(celularDigits(_celularController.text)) ??
-        validateSenha(_senhaController.text, _confirmarSenhaController.text);
+        validateSenha(_senhaController.text, _confirmarSenhaController.text) ??
+        (_aceitePolitica ? null : 'Aceite a Política de Privacidade para continuar.');
   }
 
   Future<void> _pickDataNascimento() async {
@@ -89,6 +92,7 @@ class _CompleteSignupScreenState extends State<CompleteSignupScreen> {
         senha: _senhaController.text,
         numeroCelular: celularDigits(_celularController.text),
         dataNascimento: _dataNascimento!,
+        aceitePolitica: _aceitePolitica,
       );
       if (mounted) context.navigate('/app');
     } on AuthException catch (e) {
@@ -212,6 +216,12 @@ class _CompleteSignupScreenState extends State<CompleteSignupScreen> {
                       icon: _icon(_showConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                       onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  PrivacyPolicyCheckbox(
+                    value: _aceitePolitica,
+                    enabled: !_isLoading,
+                    onChanged: (value) => setState(() => _aceitePolitica = value),
                   ),
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),

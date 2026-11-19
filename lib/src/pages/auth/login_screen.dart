@@ -223,6 +223,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.pushNamed('/privacy-policy'),
+                      child: Text(
+                        'Política de Privacidade',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Pallete.whiteColor.withAlpha(180),
+                          decoration: TextDecoration.underline,
+                          decorationColor: Pallete.whiteColor.withAlpha(180),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),

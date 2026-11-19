@@ -80,6 +80,7 @@ class AuthService {
     required String senha,
     required String numeroCelular,
     required DateTime dataNascimento,
+    required bool aceitePolitica,
   }) async {
     final body = await _postJson(
       '/auth/google/register',
@@ -90,6 +91,7 @@ class AuthService {
         'senha': senha,
         'numero_celular': numeroCelular,
         'data_nascimento': dataNascimento.toIso8601String(),
+        'aceite_politica': aceitePolitica,
       },
       'Não foi possível criar a conta',
     );
@@ -126,6 +128,7 @@ class AuthService {
     required String senha,
     required String numeroCelular,
     required DateTime dataNascimento,
+    required bool aceitePolitica,
     String? fotoPath,
   }) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
@@ -137,6 +140,7 @@ class AuthService {
         'senha': senha,
         'numero_celular': numeroCelular,
         'data_nascimento': dataNascimento.toIso8601String(),
+        'aceite_politica': '$aceitePolitica',
       });
 
     if (fotoPath != null) {

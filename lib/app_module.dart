@@ -9,6 +9,7 @@ import 'package:app_hiker/src/services/auth_service.dart';
 import 'package:app_hiker/src/pages/auth/forgot_password_screen.dart';
 import 'package:app_hiker/src/pages/auth/login_screen.dart';
 import 'package:app_hiker/src/pages/auth/register_screen.dart';
+import 'package:app_hiker/src/pages/privacy_policy_screen.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 
 class AppModule extends Module {
@@ -22,6 +23,7 @@ class AppModule extends Module {
       '/complete-signup',
       child: (context, state) => CompleteSignupScreen(signup: state.arguments as GoogleSignup),
     );
+    c.route('/privacy-policy', child: (context, state) => const PrivacyPolicyScreen());
     c.route('/app', child: (context, state) => const AppShell());
     c.route('/edit-profile', child: (context, state) => const EditProfileScreen());
     // nick without the leading "@", which the API stores as part of the nick.

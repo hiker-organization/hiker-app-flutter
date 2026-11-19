@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:app_hiker/components/login_form.dart';
+import 'package:app_hiker/components/privacy_policy_checkbox.dart';
 import 'package:app_hiker/components/submit_button.dart';
 import 'package:app_hiker/src/services/auth_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
@@ -35,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   XFile? _foto;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _aceitePolitica = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -69,7 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
         return null;
       case _Step.senha:
-        return validateSenha(_senhaController.text, _confirmarSenhaController.text);
+        return validateSenha(_senhaController.text, _confirmarSenhaController.text) ??
+            (_aceitePolitica ? null : 'Aceite a Política de Privacidade para continuar.');
       case _Step.foto:
         return null;
     }
@@ -138,6 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         senha: senha,
         numeroCelular: _celularDigits,
         dataNascimento: _dataNascimento!,
+        aceitePolitica: _aceitePolitica,
         fotoPath: withFoto ? _foto?.path : null,
       );
       await _authService.login(email: email, password: senha);
@@ -254,6 +258,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               icon: _icon(_showConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
               onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
             ),
+          ),
+          const SizedBox(height: 20),
+          PrivacyPolicyCheckbox(
+            value: _aceitePolitica,
+            onChanged: (value) => setState(() => _aceitePolitica = value),
           ),
         ];
       case _Step.foto:
