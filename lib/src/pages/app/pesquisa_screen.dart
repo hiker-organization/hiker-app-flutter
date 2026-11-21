@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_hiker/components/user_avatar.dart';
 import 'package:app_hiker/src/models/place_info.dart';
 import 'package:app_hiker/src/models/user_summary.dart';
@@ -10,7 +12,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 enum _Categoria { pessoas, lugares }
 
-// Search for people and for places already reviewed. Runs when Enter is pressed and
+// Search for people and for places already reviewed. Runs while the user types and
 // shows a few of each; "Ver mais" opens the full list of one of them.
 class PesquisaScreen extends StatefulWidget {
   const PesquisaScreen({super.key});
@@ -20,7 +22,7 @@ class PesquisaScreen extends StatefulWidget {
 }
 
 class _PesquisaScreenState extends State<PesquisaScreen> {
-  static const _minChars = 3;
+  static const _debounceDelay = Duration(milliseconds: 300);
   static const _pessoasPreview = 5;
   static const _lugaresPreview = 10;
   static const _pageSize = 20;
@@ -32,9 +34,9 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
 
+  Timer? _debounce;
   String? _query;
   bool _isLoading = false;
-  String? _errorMessage;
   // Only the answer of the last search is shown.
   int _searchId = 0;
 
@@ -59,31 +61,54 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _search(String text) async {
+  // Searches a moment after the user stops typing, without a request for every letter.
+  void _onChanged(String text) {
+    _debounce?.cancel();
+    if (text.trim().isEmpty) {
+      _search(text);
+      return;
+    }
+    _debounce = Timer(_debounceDelay, () => _search(text));
+  }
+
+  void _onSubmitted(String text) {
+    _debounce?.cancel();
+    _search(text);
+  }
+
+  void _clear() {
+    _debounce?.cancel();
+    _controller.clear();
+    _search('');
+  }
+
+  // [force] runs it again even when the text didn't change, to retry after an error.
+  Future<void> _search(String text, {bool force = false}) async {
     final query = text.trim();
+    if (!force && query == (_query ?? '') && _categoria == null) return;
     final searchId = ++_searchId;
     _closeCategoria();
 
-    if (query.length < _minChars) {
+    if (query.isEmpty) {
       setState(() {
         _query = null;
         _pessoas = null;
         _lugares = null;
         _isLoading = false;
-        _errorMessage = 'Digite pelo menos $_minChars letras para buscar.';
       });
       return;
     }
 
+    // The previous results stay on screen until the new ones arrive.
     setState(() {
       _query = query;
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
@@ -206,7 +231,8 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
             child: TextField(
               controller: _controller,
               textInputAction: TextInputAction.search,
-              onSubmitted: _search,
+              onChanged: _onChanged,
+              onSubmitted: _onSubmitted,
               decoration: InputDecoration(
                 hintText: 'Buscar pessoas, locais ou cidades',
                 contentPadding: const EdgeInsets.all(12),
@@ -216,7 +242,16 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
                         padding: EdgeInsets.all(14),
                         child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                       )
-                    : null,
+                    : ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _controller,
+                        builder: (context, value, _) => value.text.isEmpty
+                            ? const SizedBox.shrink()
+                            : IconButton(
+                                tooltip: 'Limpar',
+                                onPressed: _clear,
+                                icon: Icon(Icons.close, color: Pallete.whiteColor.withAlpha(180), size: 20),
+                              ),
+                      ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(color: Pallete.borderColor, width: 0.5),
@@ -235,8 +270,6 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
   }
 
   Widget _buildResultados() {
-    if (_errorMessage != null) return _message(_errorMessage!, color: Pallete.errorColor);
-
     final pessoas = _pessoas;
     final lugares = _lugares;
     if (pessoas == null || lugares == null) {
@@ -365,7 +398,7 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
       children: [
         Text(text, style: const TextStyle(color: Pallete.errorColor)),
         TextButton(
-          onPressed: () => _search(_query ?? ''),
+          onPressed: () => _search(_controller.text, force: true),
           child: const Text('Tentar novamente', style: TextStyle(color: Pallete.primaryColor)),
         ),
       ],
