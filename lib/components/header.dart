@@ -17,14 +17,14 @@ class Header extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: const Icon(Icons.add, color: Pallete.whiteColor),
-              onPressed: onNovaAvaliacaoTap,
-            ),
-            Image.asset('assets/img/logo.png', height: 32),
-            IconButton(
               tooltip: 'Menu',
               icon: const Icon(Icons.menu, color: Pallete.whiteColor),
               onPressed: onMenuTap,
+            ),
+            Image.asset('assets/img/logo.png', height: 32),
+            IconButton(
+              icon: const Icon(Icons.add, color: Pallete.whiteColor),
+              onPressed: onNovaAvaliacaoTap,
             ),
           ],
         ),
