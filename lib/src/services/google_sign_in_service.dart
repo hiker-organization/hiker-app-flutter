@@ -15,20 +15,11 @@ class GoogleSignInService {
   Future<void> _init() =>
       _initialized ??= GoogleSignIn.instance.initialize(serverClientId: googleWebClientId);
 
-  // Null when the user closes the picker.
-  // The lightweight flow comes first: the last account used signs in again without
-  // authenticate(), whose Google page ("signing in again to Hker") shows up on every
-  // interactive sign-in on iOS and makes Google send an e-mail about it. That's why the
-  // app logout keeps the Google session. chooseAccount skips it and asks for an account.
-  Future<String?> getIdToken({bool chooseAccount = false}) async {
+  // Opens Google's account picker. Null when the user closes it.
+  Future<String?> getIdToken() async {
     await _init();
     try {
-      if (chooseAccount) await GoogleSignIn.instance.signOut();
-      final account = (chooseAccount
-              ? null
-              : await GoogleSignIn.instance
-                  .attemptLightweightAuthentication(reportAllExceptions: true)) ??
-          await GoogleSignIn.instance.authenticate();
+      final account = await GoogleSignIn.instance.authenticate();
       return account.authentication.idToken;
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) return null;
@@ -36,8 +27,9 @@ class GoogleSignInService {
     }
   }
 
-  // Without it, the next sign-in picks the same account again without asking. Used when
-  // that account can't be used here (not linked, sign-up not finished).
+  // Ends the Google session on the device, so the next sign-in asks for an account again.
+  // Used on logout and when the account picked can't be used here (not linked, sign-up
+  // not finished).
   Future<void> signOut() async {
     try {
       await _init();
