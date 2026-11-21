@@ -121,7 +121,7 @@ class _AppDrawerState extends State<AppDrawer> {
             Divider(color: Pallete.whiteColor.withAlpha(30), height: 1),
             const SizedBox(height: 8),
             _item(Icons.person_outline, 'Perfil', _openPerfil),
-            _item(Icons.bookmark_border, 'Avaliações favoritas', () => _push('/favorites')),
+            _item(Icons.favorite_border, 'Avaliações favoritas', () => _push('/favorites')),
             _item(Icons.privacy_tip_outlined, 'Política de Privacidade', () => _push('/privacy-policy')),
             const Spacer(),
             Divider(color: Pallete.whiteColor.withAlpha(30), height: 1),

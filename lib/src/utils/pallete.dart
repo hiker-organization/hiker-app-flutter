@@ -13,4 +13,5 @@ class Pallete {
   static const Color borderColor = Color(0xFFE0E0E0);
   static const Color whiteColor = Color(0xFFFFFFFF);
   static const Color errorColor = Color(0xFFFF0000);
+  static const Color favoriteColor = Color(0xFFE53935);
 }

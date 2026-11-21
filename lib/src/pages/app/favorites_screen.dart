@@ -181,10 +181,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.bookmark_border, size: 48, color: Pallete.whiteColor.withAlpha(120)),
+              Icon(Icons.favorite_border, size: 48, color: Pallete.whiteColor.withAlpha(120)),
               const SizedBox(height: 12),
               Text(
-                'Nenhuma avaliação favoritada ainda. Toque no marcador de uma avaliação para salvá-la aqui.',
+                'Nenhuma avaliação favoritada ainda. Toque no coração de uma avaliação para salvá-la aqui.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Pallete.whiteColor.withAlpha(180)),
               ),

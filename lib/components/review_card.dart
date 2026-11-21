@@ -273,9 +273,9 @@ class _ReviewCardState extends State<ReviewCard> {
                 child: Tooltip(
                   message: _favorited ? 'Remover dos favoritos' : 'Favoritar',
                   child: Icon(
-                    _favorited ? Icons.bookmark : Icons.bookmark_border,
+                    _favorited ? Icons.favorite : Icons.favorite_border,
                     size: 20,
-                    color: _favorited ? Pallete.primaryColor : Pallete.whiteColor,
+                    color: _favorited ? Pallete.favoriteColor : Pallete.whiteColor,
                   ),
                 ),
               ),
