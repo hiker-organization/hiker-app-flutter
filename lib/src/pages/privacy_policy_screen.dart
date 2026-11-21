@@ -4,7 +4,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 // Same date as POLITICA_PRIVACIDADE_VERSAO in the API, which stores the version each
 // account accepted. Change both when the text changes.
-const politicaPrivacidadeAtualizadaEm = '19/11/2026';
+const politicaPrivacidadeAtualizadaEm = '21/11/2026';
 
 class _Secao {
   final String titulo;
@@ -33,9 +33,12 @@ const _secoes = [
     'Não usamos seus dados para publicidade e não vendemos seus dados.',
   ]),
   _Secao('Localização', [
-    'A localização só é usada enquanto você grava uma trilha. Durante a gravação ela continua sendo lida com o '
-        'app em segundo plano, e o Android mostra uma notificação enquanto isso acontece. Fora da gravação, o '
-        'app não acompanha sua localização.',
+    'A localização é usada enquanto você grava uma trilha. Durante a gravação ela continua sendo lida com o '
+        'app em segundo plano, e o Android mostra uma notificação enquanto isso acontece.',
+    'Ao buscar o local de uma avaliação ou de uma trilha, sua posição aproximada é enviada ao Google Places '
+        'para mostrar primeiro os locais mais próximos. Ela não é guardada, e se você não permitir o acesso à '
+        'localização a busca funciona normalmente, só sem essa ordenação.',
+    'Fora desses momentos, o app não acompanha sua localização.',
   ]),
   _Secao('O que fica visível para outras pessoas', [
     'Seu nome de exibição, nome de usuário, foto, reputação, avaliações publicadas e as trilhas que você '
@@ -43,7 +46,8 @@ const _secoes = [
     'Seu e-mail, celular e data de nascimento não aparecem para outros usuários.',
   ]),
   _Secao('Serviços de terceiros', [
-    'Google: entrada com a conta Google e informações dos locais (Google Places).',
+    'Google: entrada com a conta Google e informações dos locais (Google Places), que recebe o texto buscado '
+        'e, se você permitir, sua posição aproximada.',
     'Microsoft Azure: armazenamento das fotos enviadas no app.',
     'OpenStreetMap: imagens dos mapas, que recebem a área do mapa exibida.',
     'Serviço de e-mail: envio dos códigos de recuperação de senha e de troca de e-mail.',
