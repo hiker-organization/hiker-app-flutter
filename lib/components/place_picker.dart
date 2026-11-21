@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:app_hiker/src/services/places_service.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 // Google Places search to choose where a review or trail was. Shows the chosen place,
 // with a button to choose another one.
@@ -12,6 +14,9 @@ class PlacePicker extends StatefulWidget {
   // Style of the screen; the search icon and the loading indicator are added here.
   final InputDecoration decoration;
   final bool enabled;
+  // Point the results are close to, like where a trail was. Without it, the device
+  // location is used, when the user allows it.
+  final LatLng? near;
 
   const PlacePicker({
     super.key,
@@ -19,6 +24,7 @@ class PlacePicker extends StatefulWidget {
     required this.onChanged,
     required this.decoration,
     this.enabled = true,
+    this.near,
   });
 
   @override
@@ -26,10 +32,16 @@ class PlacePicker extends StatefulWidget {
 }
 
 class _PlacePickerState extends State<PlacePicker> {
+  // A known position older than this is read again; the user may have moved.
+  static const _maxLocationAge = Duration(minutes: 10);
+
   final _placesService = PlacesService();
   final _controller = TextEditingController();
 
   Timer? _debounce;
+  Future<LatLng?>? _deviceLocation;
+  DateTime? _deviceLocationAt;
+  bool _permissionAsked = false;
   List<PlaceSuggestion> _suggestions = [];
   bool _searching = false;
   String? _error;
@@ -55,9 +67,11 @@ class _PlacePickerState extends State<PlacePicker> {
     }
 
     setState(() => _searching = true);
+    // Read when a search starts, so the permission only shows up when the user searches.
+    final near = widget.near != null ? Future.value(widget.near) : _location();
     _debounce = Timer(const Duration(milliseconds: 400), () async {
       try {
-        final suggestions = await _placesService.autocomplete(query);
+        final suggestions = await _placesService.autocomplete(query, near: await near);
         if (!mounted || _controller.text.trim() != query) return;
         setState(() {
           _suggestions = suggestions;
@@ -69,6 +83,43 @@ class _PlacePickerState extends State<PlacePicker> {
         if (mounted) setState(() => _searching = false);
       }
     });
+  }
+
+  Future<LatLng?> _location() {
+    final at = _deviceLocationAt;
+    if (_deviceLocation == null || at == null || DateTime.now().difference(at) > _maxLocationAge) {
+      _deviceLocationAt = DateTime.now();
+      _deviceLocation = _readLocation();
+    }
+    return _deviceLocation!;
+  }
+
+  // Null when the location is off or not allowed; the search then goes without it.
+  // The permission is asked once, and a refusal is respected.
+  Future<LatLng?> _readLocation() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return null;
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied && !_permissionAsked) {
+        _permissionAsked = true;
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission != LocationPermission.whileInUse && permission != LocationPermission.always) return null;
+
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null && DateTime.now().difference(last.timestamp) < _maxLocationAge) {
+        return LatLng(last.latitude, last.longitude);
+      }
+      final current = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
+      return LatLng(current.latitude, current.longitude);
+    } catch (_) {
+      return null;
+    }
   }
 
   void _select(PlaceSuggestion place) {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:app_hiker/src/services/api_client.dart';
+import 'package:latlong2/latlong.dart';
 
 class PlaceSuggestion {
   final String placeId;
@@ -15,8 +16,10 @@ class PlacesService {
 
   PlacesService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
-  Future<List<PlaceSuggestion>> autocomplete(String input) async {
-    final response = await _apiClient.get('/local/search?q=${Uri.encodeQueryComponent(input)}');
+  // With [near], the places around it come first.
+  Future<List<PlaceSuggestion>> autocomplete(String input, {LatLng? near}) async {
+    final location = near == null ? '' : '&lat=${near.latitude}&lng=${near.longitude}';
+    final response = await _apiClient.get('/local/search?q=${Uri.encodeQueryComponent(input)}$location');
 
     if (response.statusCode != 200) {
       throw Exception('Não foi possível buscar locais');

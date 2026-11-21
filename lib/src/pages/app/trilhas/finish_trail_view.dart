@@ -232,6 +232,8 @@ class _FinishTrailViewState extends State<FinishTrailView> {
                   selected: _local,
                   enabled: !_isSaving,
                   decoration: _decoration('Onde foi? Busque o parque, trilha ou pico'),
+                  // Places close to where the trail ended come first.
+                  near: _tracker.route.lastWhere((segment) => segment.isNotEmpty, orElse: () => []).lastOrNull,
                   onChanged: (place) => setState(() => _local = place),
                 ),
                 const SizedBox(height: 12),

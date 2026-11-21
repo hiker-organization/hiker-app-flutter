@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Usamos sua localização para registrar o caminho das suas trilhas.</string>
+    <string>Usamos sua localização para registrar o caminho das suas trilhas e mostrar primeiro os locais próximos na busca.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Usamos sua localização para continuar registrando a trilha com a tela bloqueada.</string>
     <key>UIBackgroundModes</key>
