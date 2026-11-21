@@ -27,8 +27,10 @@ class LocalService {
   }
 
   // Search page: only places that already have reviews, with their rating.
-  Future<List<PlaceDetails>> buscar(String query) async {
-    final response = await _apiClient.get('/local/buscar?q=${Uri.encodeQueryComponent(query)}');
+  Future<List<PlaceDetails>> buscar(String query, {required int limit, int offset = 0}) async {
+    final response = await _apiClient.get(
+      '/local/buscar?q=${Uri.encodeQueryComponent(query)}&limit=$limit&offset=$offset',
+    );
     if (response.statusCode != 200) throw LocalException('Não foi possível buscar os locais.');
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;

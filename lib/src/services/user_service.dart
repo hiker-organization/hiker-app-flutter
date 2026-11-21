@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:app_hiker/src/models/user_profile.dart';
+import 'package:app_hiker/src/models/user_summary.dart';
 import 'package:app_hiker/src/services/api_client.dart';
 import 'package:app_hiker/src/services/google_sign_in_service.dart';
 import 'package:app_hiker/src/services/trail_tracker.dart';
@@ -53,6 +54,19 @@ class UserService {
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return UserProfile.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  // Search page: people by nick or display name.
+  Future<List<UserSummary>> buscar(String query, {required int limit, int offset = 0}) async {
+    final response = await _apiClient.get(
+      '/user/buscar?q=${Uri.encodeQueryComponent(query)}&limit=$limit&offset=$offset',
+    );
+    if (response.statusCode != 200) throw UserException('Não foi possível buscar pessoas.');
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return (body['data'] as List<dynamic>)
+        .map((item) => UserSummary.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   // Only the provided fields are sent. nomeUsuario goes without "@"; the API adds it.
