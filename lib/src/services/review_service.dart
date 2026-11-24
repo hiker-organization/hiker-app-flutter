@@ -31,6 +31,21 @@ class ReviewService {
     return FeedPage.fromJson(jsonDecode(response.body) as Map<String, dynamic>, Review.fromJson);
   }
 
+  // Reviews picked for the logged user by the recommendation job, best first.
+  // Empty when the job has nothing for the user yet.
+  Future<List<Review>> getRecommended() async {
+    final response = await _apiClient.get('/review/recommended');
+
+    if (response.statusCode != 200) {
+      throw Exception('Não foi possível carregar as recomendações');
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return (body['data'] as List<dynamic>)
+        .map((item) => Review.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   // Reviews the logged user favorited, the last favorited first.
   Future<FeedPage<Review>> getFavorites({int? cursor, required int limit}) async {
     final response =

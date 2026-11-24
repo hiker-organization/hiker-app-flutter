@@ -55,6 +55,9 @@ class _FeedScreenState extends State<FeedScreen> {
   late _FeedSource _reviews;
   late _FeedSource _trilhas;
 
+  // Shown on top under "Recomendados para você"; left out of [_items].
+  List<Review> _recommended = [];
+  Set<int> _recommendedIds = {};
   // Reviews and shared trails (RF29) mixed, newest first.
   List<Object> _items = [];
   bool _isLoading = true;
@@ -94,15 +97,24 @@ class _FeedScreenState extends State<FeedScreen> {
     });
 
     try {
-      await Future.wait([_reviews.loadNext(), _loadTrilhas(_trilhas)]);
+      final recommended = _loadRecommended();
+      await Future.wait([_reviews.loadNext(), _loadTrilhas(_trilhas), recommended]);
       if (!mounted || generation != _generation) return;
-      setState(() => _items = _release());
+      // The ids go in before _release, which leaves the recommended reviews out.
+      final recommendedList = await recommended;
+      _recommendedIds = {for (final review in recommendedList) review.id};
+      setState(() {
+        _recommended = recommendedList;
+        _items = _release();
+      });
       await _fill(generation, _items.length);
     } on SessionExpiredException {
       if (mounted) context.navigate('/login');
     } catch (_) {
       if (mounted && generation == _generation) {
         setState(() {
+          _recommended = [];
+          _recommendedIds = {};
           _items = [];
           _errorMessage = 'Não foi possível carregar o feed.';
         });
@@ -126,8 +138,20 @@ class _FeedScreenState extends State<FeedScreen> {
     }
   }
 
+  // A failure loading the recommendations shouldn't hide the feed: it goes on without them.
+  Future<List<Review>> _loadRecommended() async {
+    try {
+      return await _reviewService.getRecommended();
+    } on SessionExpiredException {
+      rethrow;
+    } catch (_) {
+      return [];
+    }
+  }
+
   // Takes out of the buffers the items that can be shown already, newest first: the
   // ones not older than the last item loaded of each source that still has pages.
+  // Reviews already shown as recommended are dropped.
   List<Object> _release() {
     DateTime? limit;
     for (final source in [_reviews, _trilhas]) {
@@ -139,7 +163,8 @@ class _FeedScreenState extends State<FeedScreen> {
     for (final source in [_reviews, _trilhas]) {
       source.buffer.removeWhere((item) {
         final ready = limit == null || !_createdAt(item).isBefore(limit);
-        if (ready) released.add(item);
+        final recommended = item is Review && _recommendedIds.contains(item.id);
+        if (ready && !recommended) released.add(item);
         return ready;
       });
     }
@@ -217,21 +242,29 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading && _items.isEmpty) {
+    final isEmpty = _items.isEmpty && _recommended.isEmpty;
+
+    if (_isLoading && isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_errorMessage != null && _items.isEmpty) {
+    if (_errorMessage != null && isEmpty) {
       return Center(
         child: Text(_errorMessage!, style: const TextStyle(color: Pallete.errorColor)),
       );
     }
 
-    if (_items.isEmpty && !_hasMore) {
+    if (isEmpty && !_hasMore) {
       return const Center(
         child: Text('Nenhuma review por aqui ainda.', style: TextStyle(color: Pallete.whiteColor)),
       );
     }
+
+    // The recommended reviews under their title, then the "Mais publicações" title
+    // when the feed has anything after them. Nothing when there are no recommendations.
+    final showFeedTitle = _recommended.isNotEmpty && (_items.isNotEmpty || _hasMore);
+    final recommendedCount =
+        _recommended.isEmpty ? 0 : _recommended.length + 1 + (showFeedTitle ? 1 : 0);
 
     return RefreshIndicator(
       onRefresh: _loadFeed,
@@ -239,15 +272,25 @@ class _FeedScreenState extends State<FeedScreen> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
-        itemCount: _items.length + 1,
+        itemCount: recommendedCount + _items.length + 1,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          if (index == _items.length) return _buildFooter();
-          final item = _items[index];
+          if (index < recommendedCount) {
+            if (index == 0) return _buildSectionTitle('Recomendados para você');
+            if (index > _recommended.length) return _buildSectionTitle('Mais publicações');
+            return ReviewCard(review: _recommended[index - 1]);
+          }
+          final feedIndex = index - recommendedCount;
+          if (feedIndex == _items.length) return _buildFooter();
+          final item = _items[feedIndex];
           return item is Trilha ? TrailCard(trilha: item) : ReviewCard(review: item as Review);
         },
       ),
     );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold));
   }
 
   Widget _buildFooter() {
