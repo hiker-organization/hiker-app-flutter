@@ -117,7 +117,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                     const SizedBox(height: 10),
-                    LoginForm(hintText: 'Email', controller: _emailController),
+                    LoginForm(
+                      hintText: 'Email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 10),
                     LoginForm(
                       hintText: 'Senha',

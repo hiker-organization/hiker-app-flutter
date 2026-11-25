@@ -1,4 +1,5 @@
 import 'package:app_hiker/app_module.dart';
+import 'package:app_hiker/components/keyboard_done_bar.dart';
 import 'package:app_hiker/src/services/trail_tracker.dart';
 import 'package:app_hiker/src/utils/pallete.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,8 @@ class AppWidget extends StatelessWidget {
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: ModularApp.routerConfigOf(context),
+      // "Done" bar above the iOS keyboard, for every text field of the app.
+      builder: (context, child) => KeyboardDoneBar(child: child ?? const SizedBox.shrink()),
     );
   }
 }

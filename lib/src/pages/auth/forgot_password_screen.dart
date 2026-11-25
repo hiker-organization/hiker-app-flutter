@@ -144,7 +144,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   List<Widget> get _stepFields {
     switch (_step) {
       case _Step.email:
-        return [LoginForm(hintText: 'Email', controller: _emailController)];
+        return [
+          LoginForm(hintText: 'Email', controller: _emailController, keyboardType: TextInputType.emailAddress),
+        ];
       case _Step.code:
         return [
           Text(
