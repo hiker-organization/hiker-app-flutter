@@ -134,7 +134,8 @@ class ReviewService {
     }
   }
 
-  Future<void> createReview({
+  // Returns the API message, which says when the classifier hid the review as offensive.
+  Future<String> createReview({
     required String localId,
     required String local,
     required String descricao,
@@ -166,6 +167,8 @@ class ReviewService {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw ReviewException(_extractMessage(response.body, 'Não foi possível publicar a avaliação.'));
     }
+
+    return _extractMessage(response.body, 'Avaliação publicada!');
   }
 
   String _extractMessage(String responseBody, String fallback) {

@@ -121,7 +121,7 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
     });
 
     try {
-      await _reviewService.createReview(
+      final message = await _reviewService.createReview(
         localId: _local!.placeId,
         local: _local!.name,
         descricao: _descricaoController.text.trim(),
@@ -133,7 +133,7 @@ class _NovaAvaliacaoScreenState extends State<NovaAvaliacaoScreen> {
       if (!mounted) return;
       _reset();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avaliação publicada!')),
+        SnackBar(content: Text(message), duration: const Duration(seconds: 6)),
       );
       widget.onPublished();
     } on SessionExpiredException {
