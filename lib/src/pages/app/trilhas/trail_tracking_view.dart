@@ -141,19 +141,16 @@ class _TrailTrackingViewState extends State<TrailTrackingView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Keeps the play/pause button centered and the stop button where it was.
+                  const SizedBox(width: 56),
+                  // Play and pause share the main button: pause while tracking, play otherwise.
                   _ControlButton(
-                    icon: Icons.pause,
-                    size: 56,
-                    tooltip: 'Pausar',
-                    onPressed: tracking ? _tracker.pause : null,
-                  ),
-                  _ControlButton(
-                    icon: Icons.play_arrow_rounded,
+                    icon: tracking ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     size: 88,
-                    tooltip: status == TrailStatus.paused ? 'Continuar' : 'Iniciar',
+                    tooltip: tracking ? 'Pausar' : (status == TrailStatus.paused ? 'Continuar' : 'Iniciar'),
                     highlighted: tracking,
                     loading: _starting,
-                    onPressed: canPlay ? _play : null,
+                    onPressed: tracking ? _tracker.pause : (canPlay ? _play : null),
                   ),
                   _ControlButton(
                     icon: Icons.stop_rounded,
