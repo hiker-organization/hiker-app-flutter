@@ -10,6 +10,11 @@ class ApiClient {
   final http.Client _client;
   final FlutterSecureStorage _storage;
 
+  // Refresh in progress, shared by every instance (each service creates its own). The API
+  // swaps the refresh token on each use, so a second refresh with the old one would be
+  // rejected and end a valid session.
+  static Future<String?>? _pendingRefresh;
+
   ApiClient({http.Client? client, FlutterSecureStorage? storage})
       : _client = client ?? http.Client(),
         _storage = storage ?? const FlutterSecureStorage();
@@ -101,7 +106,11 @@ class ApiClient {
     var response = await request(baseUrl, accessToken);
 
     if (response.statusCode == 401) {
-      final newAccessToken = await _refresh(baseUrl);
+      // Another request may have refreshed the token while this one was on the way.
+      final storedAccessToken = await _storage.read(key: 'access_token');
+      final newAccessToken = storedAccessToken != null && storedAccessToken != accessToken
+          ? storedAccessToken
+          : await _refresh(baseUrl);
       if (newAccessToken == null) throw SessionExpiredException();
       response = await request(baseUrl, newAccessToken);
     }
@@ -109,7 +118,11 @@ class ApiClient {
     return response;
   }
 
-  Future<String?> _refresh(String baseUrl) async {
+  Future<String?> _refresh(String baseUrl) {
+    return _pendingRefresh ??= _requestRefresh(baseUrl).whenComplete(() => _pendingRefresh = null);
+  }
+
+  Future<String?> _requestRefresh(String baseUrl) async {
     final refreshToken = await _storage.read(key: 'refresh_token');
     if (refreshToken == null) return null;
 
@@ -122,6 +135,12 @@ class ApiClient {
     // Only a rejected refresh token ends the session. A server error keeps the tokens, so
     // the user isn't logged out because the API had a problem.
     if (const {400, 401, 403}.contains(response.statusCode)) {
+      // The refresh token changed meanwhile: another refresh worked, so the session is valid.
+      final storedRefreshToken = await _storage.read(key: 'refresh_token');
+      if (storedRefreshToken != null && storedRefreshToken != refreshToken) {
+        return _storage.read(key: 'access_token');
+      }
+
       await _storage.delete(key: 'access_token');
       await _storage.delete(key: 'refresh_token');
       return null;
