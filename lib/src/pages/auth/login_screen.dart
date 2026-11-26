@@ -32,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> handleLogin() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -55,6 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
   // Linked accounts enter straight away; a first access goes to finish the sign-up.
   Future<void> handleGoogleLogin() async {
     if (_isLoading || _isGoogleLoading) return;
+    // Otherwise the keyboard stays open behind the Google sheet and after leaving.
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _isGoogleLoading = true;
       _errorMessage = null;
