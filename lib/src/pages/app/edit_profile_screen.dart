@@ -340,8 +340,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 subtitle: '••••••••',
                 onTap: _isSaving ? null : _openChangePassword,
               ),
-              const SizedBox(height: 8),
-              _buildGoogleTile(profile),
+              if (GoogleSignInService.isSupported) ...[
+                const SizedBox(height: 8),
+                _buildGoogleTile(profile),
+              ],
             ],
           ),
         ),

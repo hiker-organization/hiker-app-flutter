@@ -108,18 +108,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    SocialButton(
-                      iconName: 'google',
-                      label: 'Entrar com Google',
-                      isLoading: _isGoogleLoading,
-                      onPressed: handleGoogleLogin,
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'ou',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
-                    const SizedBox(height: 10),
+                    if (GoogleSignInService.isSupported) ...[
+                      SocialButton(
+                        iconName: 'google',
+                        label: 'Entrar com Google',
+                        isLoading: _isGoogleLoading,
+                        onPressed: handleGoogleLogin,
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'ou',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     LoginForm(
                       hintText: 'Email',
                       controller: _emailController,

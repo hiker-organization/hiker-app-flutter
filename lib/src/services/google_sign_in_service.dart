@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 // OAuth web client of the Google Cloud project, the audience of the ID token checked by the
@@ -9,6 +10,11 @@ const googleWebClientId = '74850462964-3l2p0t2v5328nrhq65vao4135eripkms.apps.goo
 class GoogleSignInService {
   GoogleSignInService._();
   static final instance = GoogleSignInService._();
+
+  // The plugin has no Windows or Linux version, so the Google options are hidden there.
+  static bool get isSupported =>
+      kIsWeb ||
+      const {TargetPlatform.android, TargetPlatform.iOS, TargetPlatform.macOS}.contains(defaultTargetPlatform);
 
   Future<void>? _initialized;
 
@@ -31,6 +37,7 @@ class GoogleSignInService {
   // Used on logout and when the account picked can't be used here (not linked, sign-up
   // not finished).
   Future<void> signOut() async {
+    if (!isSupported) return;
     try {
       await _init();
       await GoogleSignIn.instance.signOut();

@@ -38,6 +38,8 @@ class TrailTracker extends ChangeNotifier {
   final _stepDetector = StepDetector();
   final _geocoding = Geocoding(locale: const Locale('pt', 'BR'));
 
+  static final _isPhone = Platform.isAndroid || Platform.isIOS;
+
   StreamSubscription<AccelerometerEvent>? _accelerometerSub;
   StreamSubscription<Position>? _positionSub;
   Timer? _saveDebounce;
@@ -151,14 +153,18 @@ class TrailTracker extends ChangeNotifier {
     status = TrailStatus.tracking;
     notifyListeners();
 
-    _accelerometerSub = accelerometerEventStream(samplingPeriod: SensorInterval.gameInterval).listen((event) {
-      final confirmed = _stepDetector.addSample(event.x, event.y, event.z, event.timestamp);
-      if (confirmed > 0) {
-        steps += confirmed;
-        notifyListeners();
-        _scheduleSave();
-      }
-    });
+    // Steps come from the accelerometer, which only phones have (the plugin has no desktop
+    // version); on Windows the trail records the route and distance only.
+    if (_isPhone) {
+      _accelerometerSub = accelerometerEventStream(samplingPeriod: SensorInterval.gameInterval).listen((event) {
+        final confirmed = _stepDetector.addSample(event.x, event.y, event.z, event.timestamp);
+        if (confirmed > 0) {
+          steps += confirmed;
+          notifyListeners();
+          _scheduleSave();
+        }
+      });
+    }
 
     _positionSub = Geolocator.getPositionStream(locationSettings: _locationSettings()).listen(
       _onPosition,
@@ -185,6 +191,8 @@ class TrailTracker extends ChangeNotifier {
 
   // Name of the place from the first GPS fix; the user can rename it when saving.
   Future<void> _detectPlace(LatLng point) async {
+    // The geocoding plugin only exists on Android and iOS; elsewhere the user types the place.
+    if (!_isPhone) return;
     cidade = '';
     try {
       final placemarks = await _geocoding.placemarkFromCoordinates(point.latitude, point.longitude);
